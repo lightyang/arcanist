@@ -2244,32 +2244,6 @@ EOTEXT
       $source_path    = $repository_api->getPath();
       $branch         = $repository_api->getBranchName();
       $repo_uuid      = $repository_api->getRepositoryUUID();
-
-      if ($repository_api instanceof ArcanistGitAPI) {
-        $info = $this->getGitParentLogInfo();
-        if ($info['parent']) {
-          $parent = $info['parent'];
-        }
-        if ($info['base_revision']) {
-          $base_revision = $info['base_revision'];
-        }
-        if ($info['base_path']) {
-          $base_path = $info['base_path'];
-        }
-        if ($info['uuid']) {
-          $repo_uuid = $info['uuid'];
-        }
-      } else if ($repository_api instanceof ArcanistMercurialAPI) {
-
-        $bookmark = $repository_api->getActiveBookmark();
-        $svn_info = $repository_api->getSubversionInfo();
-        $repo_uuid = idx($svn_info, 'uuid');
-        $base_path = idx($svn_info, 'base_path', $base_path);
-        $base_revision = idx($svn_info, 'base_revision', $base_revision);
-
-        // TODO: provide parent info
-
-      }
     }
 
     $project_id = null;
