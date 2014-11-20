@@ -16,6 +16,7 @@ final class ArcanistTextLinter extends ArcanistLinter {
   const LINT_EOF_WHITESPACE       = 9;
 
   private $maxLineLength = 80;
+  private $limitCharset = true;
 
   public function getInfoName() {
     return pht('Basic Text Linter');
@@ -39,6 +40,10 @@ final class ArcanistTextLinter extends ArcanistLinter {
           'Adjust the maximum line length before a warning is raised. By '.
           'default, a warning is raised on lines exceeding 80 characters.'),
       ),
+      'text.limit-charset' => array(
+        'type' => 'optional bool',
+        'help' => pht('Forbid UTF-8 or other multibyte charsets.'),
+      ),
     );
 
     return $options + parent::getLinterConfigurationOptions();
@@ -49,10 +54,18 @@ final class ArcanistTextLinter extends ArcanistLinter {
     return $this;
   }
 
+  public function setLimitCharset($enabled) {
+    $this->limitCharset = $enabled;
+    return $this;
+  }
+
   public function setLinterConfigurationValue($key, $value) {
     switch ($key) {
       case 'text.max-line-length':
         $this->setMaxLineLength($value);
+        return;
+      case 'text.limit-charset':
+        $this->setLimitCharset($value);
         return;
     }
 
@@ -104,7 +117,9 @@ final class ArcanistTextLinter extends ArcanistLinter {
       return;
     }
 
-    $this->lintCharset($path);
+    if ($this->limitCharset) {
+      $this->lintCharset($path);
+    }
 
     if ($this->didStopAllLinters()) {
       return;
