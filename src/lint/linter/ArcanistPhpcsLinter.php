@@ -29,7 +29,7 @@ final class ArcanistPhpcsLinter extends ArcanistExternalLinter {
     return 'phpcs';
   }
 
-  public function getMandatoryFlags() {
+  protected function getMandatoryFlags() {
     return array('--report=xml');
   }
 
@@ -37,7 +37,7 @@ final class ArcanistPhpcsLinter extends ArcanistExternalLinter {
     return pht('Install PHPCS with `pear install PHP_CodeSniffer`.');
   }
 
-  public function getDefaultFlags() {
+  protected function getDefaultFlags() {
     $options = $this->getDeprecatedConfiguration('lint.phpcs.options', array());
     $standard = $this->getDeprecatedConfiguration('lint.phpcs.standard');
 
@@ -66,10 +66,6 @@ final class ArcanistPhpcsLinter extends ArcanistExternalLinter {
     } else {
       return false;
     }
-  }
-
-  public function shouldExpectCommandErrors() {
-    return true;
   }
 
   public function supportsReadDataFromStdin() {

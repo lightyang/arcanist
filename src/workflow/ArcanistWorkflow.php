@@ -324,6 +324,31 @@ abstract class ArcanistWorkflow extends Phobject {
           'authenticating conduit!');
       }
 
+      // If we have `token`, this server supports the simpler, new-style
+      // token-based authentication. Use that instead of all the certificate
+      // stuff.
+      if (isset($credentials['token'])) {
+        $conduit = $this->getConduit();
+
+        $conduit->setConduitToken($credentials['token']);
+
+        try {
+          $result = $this->getConduit()->callMethodSynchronous(
+            'user.whoami',
+            array());
+
+          $this->userName = $result['userName'];
+          $this->userPHID = $result['phid'];
+
+          $this->conduitAuthenticated = true;
+
+          return;
+        } catch (Exception $ex) {
+          $conduit->setConduitToken(null);
+          throw $ex;
+        }
+      }
+
       if (empty($credentials['user'])) {
         throw new ConduitClientException(
           'ERR-INVALID-USER',
@@ -351,7 +376,8 @@ abstract class ArcanistWorkflow extends Phobject {
         ));
     } catch (ConduitClientException $ex) {
       if ($ex->getErrorCode() == 'ERR-NO-CERTIFICATE' ||
-          $ex->getErrorCode() == 'ERR-INVALID-USER') {
+          $ex->getErrorCode() == 'ERR-INVALID-USER' ||
+          $ex->getErrorCode() == 'ERR-INVALID-AUTH') {
         $conduit_uri = $this->conduitURI;
         $message =
           "\n".
@@ -635,7 +661,8 @@ abstract class ArcanistWorkflow extends Phobject {
     }
 
     $more = array();
-    for ($ii = 0; $ii < count($args); $ii++) {
+    $size = count($args);
+    for ($ii = 0; $ii < $size; $ii++) {
       $arg = $args[$ii];
       $arg_name = null;
       $arg_key = null;
@@ -646,6 +673,14 @@ abstract class ArcanistWorkflow extends Phobject {
         break;
       } else if (!strncmp($arg, '--', 2)) {
         $arg_key = substr($arg, 2);
+        $parts = explode('=', $arg_key, 2);
+        if (count($parts) == 2) {
+          list($arg_key, $val) = $parts;
+
+          array_splice($args, $ii, 1, array('--'.$arg_key, $val));
+          $size++;
+        }
+
         if (!array_key_exists($arg_key, $spec)) {
           $corrected = ArcanistConfiguration::correctArgumentSpelling(
             $arg_key,
@@ -680,7 +715,7 @@ abstract class ArcanistWorkflow extends Phobject {
       if (empty($options['param'])) {
         $dict[$arg_key] = true;
       } else {
-        if ($ii == count($args) - 1) {
+        if ($ii == $size - 1) {
           throw new ArcanistUsageException(pht(
             "Option '%s' requires a parameter.",
             $arg));

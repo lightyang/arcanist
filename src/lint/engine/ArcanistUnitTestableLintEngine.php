@@ -4,7 +4,7 @@
  * Lint engine for use in constructing test cases. See
  * @{class:ArcanistLinterTestCase}.
  */
-final class UnitTestableArcanistLintEngine extends ArcanistLintEngine {
+final class ArcanistUnitTestableLintEngine extends ArcanistLintEngine {
 
   protected $linters = array();
 
@@ -19,13 +19,13 @@ final class UnitTestableArcanistLintEngine extends ArcanistLintEngine {
   }
 
   public function pathExists($path) {
-    if (idx($this->fileData, $path)) {
+    if (idx($this->fileData, $path) !== null) {
       return true;
     }
     return parent::pathExists($path);
   }
 
-  protected function buildLinters() {
+  public function buildLinters() {
     return $this->linters;
   }
 
