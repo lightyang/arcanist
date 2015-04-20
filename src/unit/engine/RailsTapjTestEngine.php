@@ -14,15 +14,16 @@ final class RailsTapjTestEngine extends ArcanistUnitTestEngine {
 
       sleep(0.5);
     } while (!$future->isReady());
+    list($err, $stdout, $stderr) = $future->resolve();
 
-    return $this->parseOutput(Filesystem::readFile($output));
+    return $this->parseOutput(Filesystem::readFile($output), $stderr);
   }
 
   public function shouldEchoTestResults() {
     return true;
   }
 
-  private function parseOutput($output) {
+  private function parseOutput($output, $error) {
     $results = array();
     $lines = explode(PHP_EOL, trim($output));
 
@@ -54,15 +55,16 @@ final class RailsTapjTestEngine extends ArcanistUnitTestEngine {
 
         $results[] = $result;
         break;
-
-      case '':
-        $result = new ArcanistUnitTestResult();
-        $result->setName("Unknown Error: " . substr($line, 0, 60));
-        $result->setResult(ArcanistUnitTestResult::RESULT_BROKEN);
-        $result->setUserData($line);
-        $results[] = $result;
-        break;
       }
+    }
+
+    $error = trim($error);
+    if ($error != "") {
+      $result = new ArcanistUnitTestResult();
+      $result->setName("Unknown Error: " . substr($error, 0, 60));
+      $result->setResult(ArcanistUnitTestResult::RESULT_BROKEN);
+      $result->setUserData($error);
+      $results[] = $result;
     }
 
     return $results;
