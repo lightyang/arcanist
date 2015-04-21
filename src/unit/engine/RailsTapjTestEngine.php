@@ -50,6 +50,13 @@ final class RailsTapjTestEngine extends ArcanistUnitTestEngine {
           $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
           $result->setUserData($json['exception']['message']);
           break;
+        case 'error':
+          $result->setResult(ArcanistUnitTestResult::RESULT_BROKEN);
+          $result->setUserData($json['exception']['message']);
+          break;
+        default:
+          $result->setResult(ArcanistUnitTestResult::RESULT_BROKEN);
+          $result->setUserData("Unknown Error: " . $line);
         }
 
         $results[] = $result;
