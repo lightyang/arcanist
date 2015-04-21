@@ -3,8 +3,7 @@
 final class RailsTapjTestEngine extends ArcanistUnitTestEngine {
 
   public function run() {
-    $output = new TempFile();
-    $command = 'rpt=tapj bundle exec rake test | tee ' . $output . ' | bundle exec tapout pro';
+    $command = 'rpt=tapj bundle exec rake test';
     $future = new ExecFuture($command);
 
     do {
@@ -16,14 +15,14 @@ final class RailsTapjTestEngine extends ArcanistUnitTestEngine {
     } while (!$future->isReady());
     list($err, $stdout, $stderr) = $future->resolve();
 
-    return $this->parseOutput(Filesystem::readFile($output), $stderr);
+    return $this->parseOutput($stdout, $err);
   }
 
   public function shouldEchoTestResults() {
     return true;
   }
 
-  private function parseOutput($output, $error) {
+  private function parseOutput($output, $err) {
     $results = array();
     $lines = explode(PHP_EOL, trim($output));
 
@@ -58,12 +57,10 @@ final class RailsTapjTestEngine extends ArcanistUnitTestEngine {
       }
     }
 
-    $error = trim($error);
-    if ($error != "") {
+    if ($err != 0) {
       $result = new ArcanistUnitTestResult();
-      $result->setName("Unknown Error: " . substr($error, 0, 60));
+      $result->setName("Unknown Error: Command failed with status" . $err);
       $result->setResult(ArcanistUnitTestResult::RESULT_BROKEN);
-      $result->setUserData($error);
       $results[] = $result;
     }
 
