@@ -59,7 +59,7 @@ final class RailsTapjTestEngine extends ArcanistUnitTestEngine {
 
     if ($err != 0) {
       $result = new ArcanistUnitTestResult();
-      $result->setName("Unknown Error: Command failed with status" . $err);
+      $result->setName("Unknown Error: Command failed with status " . $err);
       $result->setResult(ArcanistUnitTestResult::RESULT_BROKEN);
       $results[] = $result;
     }
